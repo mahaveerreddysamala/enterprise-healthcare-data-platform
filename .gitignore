@@ -15,3 +15,9 @@ data/gold/
 data/sample/*.parquet
 data/sample/*.json
 spark-warehouse/
+# Terraform
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfvars
+!**/terraform.tfvars.example
