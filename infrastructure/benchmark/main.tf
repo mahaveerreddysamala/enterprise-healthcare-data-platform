@@ -26,6 +26,21 @@ data "aws_ami" "amazon_linux" {
     name   = "state"
     values = ["available"]
   }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
 }
 
 resource "aws_s3_bucket" "benchmark" {
