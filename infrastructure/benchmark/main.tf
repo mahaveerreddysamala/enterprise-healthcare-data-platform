@@ -119,7 +119,10 @@ resource "aws_instance" "benchmark" {
   vpc_security_group_ids = [aws_security_group.benchmark.id]
   iam_instance_profile   = aws_iam_instance_profile.benchmark.name
 
-  associate_public_ip_address = false
+  # The default VPC has public subnets and an Internet Gateway but no NAT Gateway.
+  # A public IP is required temporarily so cloud-init can install benchmark packages.
+  # The security group has no ingress rules, so the instance is not reachable inbound.
+  associate_public_ip_address = true
 
   root_block_device {
     volume_size = var.root_volume_gb
