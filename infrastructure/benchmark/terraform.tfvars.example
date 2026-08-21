@@ -1,0 +1,6 @@
+aws_region     = "us-east-1"
+bucket_name    = "replace-with-globally-unique-benchmark-bucket"
+vpc_id         = "vpc-xxxxxxxx"
+subnet_id      = "subnet-xxxxxxxx"
+instance_type  = "m6i.2xlarge"
+root_volume_gb = 150
