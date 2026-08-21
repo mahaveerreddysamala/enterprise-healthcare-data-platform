@@ -1,0 +1,19 @@
+benchmark:
+  smoke_rows: 100000
+  local_rows: 1000000
+  cluster_rows: 10000000
+  portfolio_rows: 50000000
+  seed: 42
+  output_format: parquet
+  partition_column: event_date
+
+spark:
+  shuffle_partitions: 200
+  adaptive_query_execution: true
+  skew_join: true
+  compression: snappy
+
+quality:
+  max_duplicate_event_rate: 0.001
+  max_null_patient_rate: 0.0
+  max_negative_cost_rate: 0.0
