@@ -22,4 +22,15 @@ TMPDIR=/opt/pip-tmp python3.11 -m pip install --no-cache-dir --prefer-binary \
 TMPDIR=/opt/pip-tmp python3.11 -m pip install --no-cache-dir --prefer-binary \
   pyspark==3.5.3
 
+# Prepare benchmark workspace.
 chown -R ec2-user:ec2-user /opt/healthcare-benchmark /opt/pip-tmp
+
+# Emit compact verification lines for cloud-init troubleshooting.
+python3.11 --version
+java -version 2>&1 | head -n 1
+python3.11 -c 'import pyspark; print("pyspark=" + pyspark.__version__)'
+python3.11 -c 'import pandas; print("pandas=" + pandas.__version__)'
+python3.11 -c 'import numpy; print("numpy=" + numpy.__version__)'
+python3.11 -c 'import pyarrow; print("pyarrow=" + pyarrow.__version__)'
+
+echo "healthcare benchmark bootstrap completed successfully"
