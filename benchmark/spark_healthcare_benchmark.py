@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
@@ -32,9 +34,20 @@ def main() -> None:
     if args.rows <= 0:
         raise ValueError("--rows must be positive")
 
+    # EC2 benchmark instances can have a small /tmp filesystem even when the
+    # root EBS volume has plenty of free space. Keep Spark's local files on the
+    # persistent benchmark volume instead of filling /tmp with dependency jars.
+    local_dir = Path("/opt/healthcare-benchmark/spark-local")
+    local_dir.mkdir(parents=True, exist_ok=True)
+    os.environ["SPARK_LOCAL_DIRS"] = str(local_dir)
+    os.environ["TMPDIR"] = str(local_dir)
+    os.environ["TMP"] = str(local_dir)
+    os.environ["TEMP"] = str(local_dir)
+
     spark = (
         SparkSession.builder
         .appName("EnterpriseHealthcareBenchmark")
+        .config("spark.local.dir", str(local_dir))
         .config(
             "spark.hadoop.fs.s3a.impl",
             "org.apache.hadoop.fs.s3a.S3AFileSystem",
