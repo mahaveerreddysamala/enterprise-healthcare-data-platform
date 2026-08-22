@@ -36,11 +36,6 @@ def main() -> None:
         SparkSession.builder
         .appName("EnterpriseHealthcareBenchmark")
         .config(
-            "spark.jars",
-            "/opt/spark/jars/hadoop-aws-3.3.4.jar,"
-            "/opt/spark/jars/aws-java-sdk-bundle-1.12.262.jar",
-        )
-        .config(
             "spark.hadoop.fs.s3a.impl",
             "org.apache.hadoop.fs.s3a.S3AFileSystem",
         )
