@@ -57,7 +57,15 @@ def generate_chunk(start: int, rows: int, seed: int) -> pd.DataFrame:
             ),
         }
     )
-    return result[COLUMNS]
+    return result[COLUMNS].astype(
+        {
+            "age": np.int32,
+            "chronic_condition": np.int32,
+            "emergency_visit": np.int32,
+            "length_of_stay": np.int32,
+            "readmitted_30d": np.int32,
+        }
+    )
 
 
 def generate(rows: int, output: str, chunk_size: int, seed: int) -> None:
