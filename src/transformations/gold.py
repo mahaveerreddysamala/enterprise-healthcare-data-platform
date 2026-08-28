@@ -1,5 +1,9 @@
 """Gold-layer patient aggregates for analytics and ML features."""
-from pyspark.sql import functions as F
+from __future__ import annotations
+
+import argparse
+
+from pyspark.sql import SparkSession, functions as F
 
 
 def build_patient_gold(df):
@@ -17,7 +21,26 @@ def build_patient_gold(df):
     ).withColumn(
         "risk_segment",
         F.when(F.col("avg_risk_score") >= 0.70, "critical")
-         .when(F.col("avg_risk_score") >= 0.45, "high")
-         .when(F.col("avg_risk_score") >= 0.20, "medium")
-         .otherwise("low")
+        .when(F.col("avg_risk_score") >= 0.45, "high")
+        .when(F.col("avg_risk_score") >= 0.20, "medium")
+        .otherwise("low"),
     )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--output", required=True)
+    args = parser.parse_args()
+
+    spark = SparkSession.builder.appName("healthcare-gold").getOrCreate()
+    try:
+        silver = spark.read.parquet(args.input)
+        gold = build_patient_gold(silver)
+        gold.write.mode("overwrite").parquet(args.output)
+    finally:
+        spark.stop()
+
+
+if __name__ == "__main__":
+    main()
