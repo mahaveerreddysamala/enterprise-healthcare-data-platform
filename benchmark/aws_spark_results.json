@@ -12,6 +12,7 @@
       "partitions": 2,
       "runtime_seconds": 22.866,
       "rows_per_second": 4373.25,
+      "s3_output": "s3a://mahaveer-healthcare-benchmark-560396669479/results/100k-t3small",
       "status": "success"
     },
     {
@@ -19,6 +20,9 @@
       "partitions": 2,
       "runtime_seconds": 27.71,
       "rows_per_second": 36087.74,
+      "s3_output": "s3a://mahaveer-healthcare-benchmark-560396669479/results/1m-t3small",
+      "s3_objects": 11,
+      "s3_size_mib": 10.0,
       "status": "success"
     },
     {
@@ -26,6 +30,17 @@
       "partitions": 2,
       "runtime_seconds": 52.146,
       "rows_per_second": 191768.23,
+      "s3_output": "s3a://mahaveer-healthcare-benchmark-560396669479/results/10m-t3small",
+      "status": "success"
+    },
+    {
+      "rows": 50000000,
+      "partitions": 2,
+      "runtime_seconds": 156.294,
+      "rows_per_second": 319909.05,
+      "s3_output": "s3a://mahaveer-healthcare-benchmark-560396669479/results/50m-t3small",
+      "s3_objects": 11,
+      "s3_size_mib": 440.1,
       "status": "success"
     }
   ],
