@@ -112,11 +112,12 @@ The cloud benchmark executes PySpark on Amazon EC2 through AWS Systems Manager a
 
 | Component | Configuration |
 |---|---|
+| Instance type | **t3.small** |
 | Region | `us-east-1` |
 | Compute | Amazon EC2 |
-| Operating System | Amazon Linux |
+| Operating System | Amazon Linux 2023 |
 | CPU | 2 vCPUs |
-| Memory | ~916 MiB |
+| Memory | ~1.9 GiB |
 | Root Storage | 100 GB |
 | Python | 3.11.15 |
 | Java | OpenJDK Corretto 17.0.20 |
@@ -125,31 +126,44 @@ The cloud benchmark executes PySpark on Amazon EC2 through AWS Systems Manager a
 | Storage | Amazon S3 |
 | Format | Snappy Parquet |
 
-### 100K Benchmark Result
+### Official 100K Benchmark Result
+
+The official benchmark uses the upgraded `t3.small` instance with approximately 1.9 GiB of memory.
 
 | Metric | Measured Result |
 |---|---:|
 | Records processed | **100,000** |
 | Spark partitions | **2** |
-| Runtime | **21.891 seconds** |
-| Throughput | **4,568.17 rows/sec** |
+| Runtime | **22.866 seconds** |
+| Throughput | **4,373.25 rows/sec** |
 | Spark version | **3.5.3** |
 | Exit code | **0** |
 | Status | **SUCCESS** |
 | S3 output objects | **11** |
-| S3 output size | **~1.1 MiB** |
 
 Output location:
 
 ```text
-s3a://<benchmark-bucket>/results/100k
+s3a://<benchmark-bucket>/results/100k-t3small
 ```
 
 The validated output contains eight patient Parquet files partitioned across four regions, one summary Parquet file, and two Spark `_SUCCESS` markers.
 
+### Verified S3 Layout
+
+```text
+results/100k-t3small/
+├── patients/
+│   ├── region=Midwest/
+│   ├── region=Northeast/
+│   ├── region=South/
+│   └── region=West/
+└── summary/
+```
+
 ### Benchmark Summary
 
-The generated 100K dataset was aggregated by region and diagnosis. Selected verified results include:
+The generated 100K dataset was aggregated by region and diagnosis. The verified summary includes balanced synthetic distributions across the modeled regions and diagnoses.
 
 | Region | Diagnosis | Patient Count | Avg Annual Cost | Avg Risk Score |
 |---|---|---:|---:|---:|
@@ -170,17 +184,19 @@ The generated 100K dataset was aggregated by region and diagnosis. Selected veri
 
 The first cloud benchmark attempt exposed a practical Spark infrastructure issue: `/tmp` was a 459 MB `tmpfs`, while Spark attempted to distribute a roughly 268 MB AWS Java SDK bundle. The job failed with `java.io.IOException: No space left on device` even though the EC2 root filesystem had ample free capacity.
 
-The benchmark was corrected by directing Spark temporary and local execution storage to the EBS-backed filesystem:
+The benchmark was corrected by directing Spark local execution and temporary storage to the persistent benchmark volume:
 
 ```bash
-mkdir -p /var/tmp/spark
-export SPARK_LOCAL_DIRS=/var/tmp/spark
-export TMPDIR=/var/tmp/spark
+mkdir -p /opt/healthcare-benchmark/spark-local
+export SPARK_LOCAL_DIRS=/opt/healthcare-benchmark/spark-local
+export TMPDIR=/opt/healthcare-benchmark/spark-local
 ```
 
-After the change, the 10K smoke test and 100K benchmark completed successfully.
+The benchmark script also configures the same local directory internally so Spark does not depend on the small `/tmp` filesystem.
 
-This troubleshooting demonstrates practical experience with Spark local storage, JVM dependency distribution, EC2 filesystem constraints, S3A connectivity, and remote AWS execution.
+The `t3.micro` environment also exposed memory pressure and kernel OOM events during repeated Spark dependency distribution. The benchmark environment was upgraded to `t3.small`, providing approximately 1.9 GiB of memory.
+
+After these changes, SSM returned to `Online` and the 100K benchmark completed successfully.
 
 ## Reproducing the Benchmark
 
@@ -206,7 +222,7 @@ $cmd = aws ssm send-command `
   --region us-east-1 `
   --instance-ids <instance-id> `
   --document-name "AWS-RunShellScript" `
-  --parameters 'commands=["export SPARK_LOCAL_DIRS=/var/tmp/spark; export TMPDIR=/var/tmp/spark; python3.11 /opt/healthcare-benchmark/spark_healthcare_benchmark.py --rows 100000 --partitions 2 --output s3a://<benchmark-bucket>/results/100k"]' `
+  --parameters 'commands=["export SPARK_LOCAL_DIRS=/opt/healthcare-benchmark/spark-local; export TMPDIR=/opt/healthcare-benchmark/spark-local; python3.11 /opt/healthcare-benchmark/spark_healthcare_benchmark.py --rows 100000 --partitions 2 --output s3a://<benchmark-bucket>/results/100k-t3small"]' `
   --timeout-seconds 300 `
   --query "Command.CommandId" `
   --output text
@@ -227,7 +243,7 @@ Verify S3 output:
 
 ```powershell
 aws s3 ls `
-  s3://<benchmark-bucket>/results/100k/ `
+  s3://<benchmark-bucket>/results/100k-t3small/ `
   --recursive `
   --human-readable `
   --summarize `
@@ -292,8 +308,6 @@ Batch scoring
 Prediction / drift monitoring
 ```
 
-Production monitoring should cover feature missingness, feature drift, prediction distribution, risk-band mix, data freshness, pipeline SLA, and matured model performance.
-
 ## Cloud Architecture
 
 | Service | Purpose |
@@ -322,6 +336,10 @@ src/
 
 benchmark/
   spark_healthcare_benchmark.py
+
+data/sample/
+  events.csv          representative synthetic sample
+  README.md           sample-data documentation
 
 pipelines/             orchestration entry points
 sql/                   dimensional and analytics SQL
@@ -409,7 +427,7 @@ GitHub Actions validates the project on **Python 3.11 and 3.12** with dependency
 
 ### Resume-Ready Description
 
-> Built a production-oriented healthcare data platform using Python, PySpark, AWS EC2, S3, and Systems Manager; implemented Bronze/Silver/Gold pipelines, healthcare data contracts, partitioned Parquet storage, patient-level feature engineering, dimensional analytics, readmission/cost/risk ML workflows, MLflow tracking, Docker/Airflow orchestration, Terraform infrastructure, and a measured 100K-row Spark benchmark achieving **4,568 rows/sec** with **21.9-second runtime** while writing partitioned Parquet results to Amazon S3.
+> Built a production-oriented healthcare data platform using Python, PySpark, AWS EC2, S3, and Systems Manager; implemented Bronze/Silver/Gold pipelines, healthcare data contracts, partitioned Parquet storage, patient-level feature engineering, dimensional analytics, readmission/cost/risk ML workflows, MLflow tracking, Docker/Airflow orchestration, Terraform infrastructure, and a measured 100K-row Spark benchmark achieving **4,373 rows/sec** with **22.9-second runtime** on a `t3.small` while writing partitioned Parquet results to Amazon S3.
 
 ## Roadmap
 
@@ -423,8 +441,8 @@ GitHub Actions validates the project on **Python 3.11 and 3.12** with dependency
 - [x] Docker/Airflow/AWS architecture foundation
 - [x] AWS EC2 + SSM + S3 benchmark infrastructure
 - [x] Measured 10K smoke benchmark
-- [x] Measured 100K Spark benchmark
-- [x] Verified partitioned Parquet output in Amazon S3
+- [x] **Measured 100K Spark benchmark on t3.small**
+- [x] **Verified partitioned Parquet output in Amazon S3**
 - [ ] Execute 1M benchmark
 - [ ] Execute 10M distributed Spark benchmark
 - [ ] Execute and publish measured 50M+ benchmark
@@ -437,13 +455,15 @@ GitHub Actions validates the project on **Python 3.11 and 3.12** with dependency
 
 ```text
 Dataset:        100,000 synthetic healthcare records
-Runtime:        21.891 seconds
-Throughput:     4,568.17 rows/sec
+Instance:       AWS EC2 t3.small
+Runtime:        22.866 seconds
+Throughput:     4,373.25 rows/sec
 Partitions:     2
 Spark:          3.5.3
 Compute:        AWS EC2
 Storage:        Amazon S3
 Format:         Snappy Parquet
+S3 Objects:     11
 Status:         SUCCESS
 ```
 
