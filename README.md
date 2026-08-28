@@ -10,7 +10,7 @@ A production-oriented **Senior Data Engineer + Senior Data Scientist** portfolio
 
 This platform demonstrates an end-to-end healthcare data engineering and machine learning architecture covering large-scale synthetic healthcare event generation, canonical data contracts, PySpark Bronze → Silver → Gold processing, data validation, partitioned Parquet storage, patient-level feature engineering, dimensional analytics, ML workflows, MLflow tracking, batch inference, Airflow orchestration design, Dockerized execution, Terraform infrastructure, and AWS benchmarking.
 
-The project includes a **measured 100,000-row Apache Spark benchmark running on AWS EC2 and writing partitioned Parquet results to Amazon S3**.
+The project includes measured Spark benchmarks on AWS EC2 writing partitioned Parquet results to Amazon S3.
 
 ## Architecture
 
@@ -99,8 +99,8 @@ The generator is chunk-oriented so local development does not require loading th
 | Workload | Purpose | Status |
 |---|---|---|
 | 10K | Developer smoke test | ✅ Complete |
-| **100K** | AWS Spark integration benchmark | ✅ **Measured** |
-| 1M | Performance testing | Planned |
+| 100K | AWS Spark integration benchmark | ✅ Measured |
+| **1M** | AWS Spark performance benchmark | ✅ **Measured** |
 | 10M | Distributed Spark benchmark | Planned |
 | 50M+ | Portfolio-scale benchmark | Planned |
 
@@ -126,9 +126,14 @@ The cloud benchmark executes PySpark on Amazon EC2 through AWS Systems Manager a
 | Storage | Amazon S3 |
 | Format | Snappy Parquet |
 
-### Official 100K Benchmark Result
+### Benchmark Results
 
-The official benchmark uses the upgraded `t3.small` instance with approximately 1.9 GiB of memory.
+| Workload | Rows | Partitions | Runtime | Throughput | Status |
+|---|---:|---:|---:|---:|---|
+| 100K | 100,000 | 2 | 22.866 sec | 4,373.25 rows/sec | ✅ Success |
+| **1M** | **1,000,000** | **2** | **27.710 sec** | **36,087.74 rows/sec** | ✅ **Success** |
+
+### 100K Benchmark Result
 
 | Metric | Measured Result |
 |---|---:|
@@ -147,12 +152,40 @@ Output location:
 s3a://<benchmark-bucket>/results/100k-t3small
 ```
 
-The validated output contains eight patient Parquet files partitioned across four regions, one summary Parquet file, and two Spark `_SUCCESS` markers.
+### 1M Benchmark Result
+
+The 1M benchmark used the same `t3.small` EC2 configuration and successfully processed ten times as many records as the 100K run.
+
+| Metric | Measured Result |
+|---|---:|
+| Records processed | **1,000,000** |
+| Spark partitions | **2** |
+| Runtime | **27.710 seconds** |
+| Throughput | **36,087.74 rows/sec** |
+| Spark version | **3.5.3** |
+| Exit code | **0** |
+| Status | **SUCCESS** |
+| S3 output objects | **11** |
+| S3 output size | **10.0 MiB** |
+
+Output location:
+
+```text
+s3a://<benchmark-bucket>/results/1m-t3small
+```
+
+### Scaling Observation
+
+The workload increased from 100K to 1M records, a **10× increase in rows**, while measured runtime increased from 22.866 seconds to 27.710 seconds. Throughput increased from 4,373.25 to 36,087.74 rows/sec. This demonstrates that Spark startup and JVM initialization overhead is amortized over larger workloads on this small EC2 configuration.
+
+These results are environment-specific reference measurements, not universal Spark performance guarantees.
 
 ### Verified S3 Layout
 
+For the 1M run:
+
 ```text
-results/100k-t3small/
+results/1m-t3small/
 ├── patients/
 │   ├── region=Midwest/
 │   ├── region=Northeast/
@@ -160,6 +193,8 @@ results/100k-t3small/
 │   └── region=West/
 └── summary/
 ```
+
+The 1M validation produced eight patient Parquet files across four regions, one summary Parquet file, and two Spark `_SUCCESS` markers, for **11 S3 objects totaling 10.0 MiB**.
 
 ### Benchmark Summary
 
@@ -196,7 +231,7 @@ The benchmark script also configures the same local directory internally so Spar
 
 The `t3.micro` environment also exposed memory pressure and kernel OOM events during repeated Spark dependency distribution. The benchmark environment was upgraded to `t3.small`, providing approximately 1.9 GiB of memory.
 
-After these changes, SSM returned to `Online` and the 100K benchmark completed successfully.
+After these changes, SSM returned to `Online` and the 100K and 1M benchmarks completed successfully.
 
 ## Reproducing the Benchmark
 
@@ -215,15 +250,15 @@ aws ssm describe-instance-information `
   --output table
 ```
 
-Run the 100K benchmark:
+Run a 1M benchmark:
 
 ```powershell
 $cmd = aws ssm send-command `
   --region us-east-1 `
   --instance-ids <instance-id> `
   --document-name "AWS-RunShellScript" `
-  --parameters 'commands=["export SPARK_LOCAL_DIRS=/opt/healthcare-benchmark/spark-local; export TMPDIR=/opt/healthcare-benchmark/spark-local; python3.11 /opt/healthcare-benchmark/spark_healthcare_benchmark.py --rows 100000 --partitions 2 --output s3a://<benchmark-bucket>/results/100k-t3small"]' `
-  --timeout-seconds 300 `
+  --parameters 'commands=["export SPARK_LOCAL_DIRS=/opt/healthcare-benchmark/spark-local; export TMPDIR=/opt/healthcare-benchmark/spark-local; python3.11 /opt/healthcare-benchmark/spark_healthcare_benchmark.py --rows 1000000 --partitions 2 --output s3a://<benchmark-bucket>/results/1m-t3small"]' `
+  --timeout-seconds 900 `
   --query "Command.CommandId" `
   --output text
 ```
@@ -243,7 +278,7 @@ Verify S3 output:
 
 ```powershell
 aws s3 ls `
-  s3://<benchmark-bucket>/results/100k-t3small/ `
+  s3://<benchmark-bucket>/results/1m-t3small/ `
   --recursive `
   --human-readable `
   --summarize `
@@ -427,7 +462,7 @@ GitHub Actions validates the project on **Python 3.11 and 3.12** with dependency
 
 ### Resume-Ready Description
 
-> Built a production-oriented healthcare data platform using Python, PySpark, AWS EC2, S3, and Systems Manager; implemented Bronze/Silver/Gold pipelines, healthcare data contracts, partitioned Parquet storage, patient-level feature engineering, dimensional analytics, readmission/cost/risk ML workflows, MLflow tracking, Docker/Airflow orchestration, Terraform infrastructure, and a measured 100K-row Spark benchmark achieving **4,373 rows/sec** with **22.9-second runtime** on a `t3.small` while writing partitioned Parquet results to Amazon S3.
+> Built a production-oriented healthcare data platform using Python, PySpark, AWS EC2, S3, and Systems Manager; implemented Bronze/Silver/Gold pipelines, healthcare data contracts, partitioned Parquet storage, patient-level feature engineering, dimensional analytics, readmission/cost/risk ML workflows, MLflow tracking, Docker/Airflow orchestration, Terraform infrastructure, and measured 100K and 1M-row Spark benchmarks on a `t3.small`, with the 1M workload achieving **36,087.74 rows/sec** while writing partitioned Parquet results to Amazon S3.
 
 ## Roadmap
 
@@ -441,9 +476,10 @@ GitHub Actions validates the project on **Python 3.11 and 3.12** with dependency
 - [x] Docker/Airflow/AWS architecture foundation
 - [x] AWS EC2 + SSM + S3 benchmark infrastructure
 - [x] Measured 10K smoke benchmark
-- [x] **Measured 100K Spark benchmark on t3.small**
-- [x] **Verified partitioned Parquet output in Amazon S3**
-- [ ] Execute 1M benchmark
+- [x] Measured 100K Spark benchmark on t3.small
+- [x] Verified partitioned Parquet output in Amazon S3
+- [x] **Measured 1M Spark benchmark on t3.small**
+- [x] **Verified 1M partitioned Parquet output in Amazon S3**
 - [ ] Execute 10M distributed Spark benchmark
 - [ ] Execute and publish measured 50M+ benchmark
 - [ ] Compare multiple partition configurations
@@ -454,17 +490,10 @@ GitHub Actions validates the project on **Python 3.11 and 3.12** with dependency
 ## Current Benchmark Status
 
 ```text
-Dataset:        100,000 synthetic healthcare records
-Instance:       AWS EC2 t3.small
-Runtime:        22.866 seconds
-Throughput:     4,373.25 rows/sec
-Partitions:     2
-Spark:          3.5.3
-Compute:        AWS EC2
-Storage:        Amazon S3
-Format:         Snappy Parquet
-S3 Objects:     11
-Status:         SUCCESS
+100K:  22.866 seconds  |  4,373.25 rows/sec  | SUCCESS
+1M:    27.710 seconds  | 36,087.74 rows/sec  | SUCCESS
 ```
 
-The benchmark is a measured reference point for this EC2 configuration, not a universal Spark performance guarantee.
+Both benchmarks were executed on the same `t3.small` EC2 environment with Spark 3.5.3 and S3A-backed Parquet output.
+
+The benchmark results are measured reference points for this environment, not universal Spark performance guarantees.
