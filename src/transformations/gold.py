@@ -7,11 +7,11 @@ from pyspark.sql import SparkSession, Window, functions as F
 
 
 def build_patient_gold(df):
-    """Build one patient row using only history before the latest encounter.
+    """Build one patient row for prediction at the latest encounter.
 
-    The latest encounter supplies the prediction target and timestamp. Feature
-    aggregates are computed strictly from prior encounters to avoid target
-    leakage in chronological model evaluation.
+    The latest encounter supplies features that are known at prediction time,
+    the prediction timestamp, and the target. Historical aggregates are built
+    only from earlier encounters to avoid target leakage.
     """
     window = Window.partitionBy("patient_id").orderBy(
         F.col("event_date").desc(), F.col("encounter_id").desc()
@@ -23,6 +23,10 @@ def build_patient_gold(df):
         F.col("event_date").alias("event_date"),
         F.col("age").alias("age"),
         F.col("gender").alias("gender"),
+        F.col("chronic_condition").alias("current_chronic_condition"),
+        F.col("emergency_visit").alias("current_emergency_visit"),
+        F.col("length_of_stay").alias("current_length_of_stay"),
+        F.col("risk_score").alias("current_risk_score"),
         F.col("readmitted_30d").alias("readmitted_30d"),
     )
 
@@ -42,6 +46,10 @@ def build_patient_gold(df):
         "event_date",
         "age",
         "gender",
+        "current_chronic_condition",
+        "current_emergency_visit",
+        "current_length_of_stay",
+        "current_risk_score",
         F.coalesce(F.col("encounter_count"), F.lit(0)).cast("long").alias("encounter_count"),
         F.coalesce(F.col("emergency_visits"), F.lit(0)).cast("long").alias("emergency_visits"),
         F.coalesce(F.col("total_los"), F.lit(0)).cast("long").alias("total_los"),
@@ -55,9 +63,9 @@ def build_patient_gold(df):
 
     return result.withColumn(
         "risk_segment",
-        F.when(F.col("avg_risk_score") >= 0.70, "critical")
-        .when(F.col("avg_risk_score") >= 0.45, "high")
-        .when(F.col("avg_risk_score") >= 0.20, "medium")
+        F.when(F.col("current_risk_score") >= 0.70, "critical")
+        .when(F.col("current_risk_score") >= 0.45, "high")
+        .when(F.col("current_risk_score") >= 0.20, "medium")
         .otherwise("low"),
     )
 
