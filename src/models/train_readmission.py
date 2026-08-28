@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import sys
 
 import joblib
 import pandas as pd
@@ -19,6 +20,10 @@ from sklearn.metrics import (
 )
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+# Support both `python -m src.models.train_readmission` and direct script execution.
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.models.feature_contract import CATEGORICAL, NUMERIC, TARGET
 
