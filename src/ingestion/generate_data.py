@@ -59,6 +59,10 @@ def generate_chunk(start: int, rows: int, seed: int) -> pd.DataFrame:
     )
     return result[COLUMNS].astype(
         {
+            "encounter_id": np.int64,
+            "patient_id": np.int64,
+            "provider_id": np.int64,
+            "facility_id": np.int64,
             "age": np.int32,
             "chronic_condition": np.int32,
             "emergency_visit": np.int32,
