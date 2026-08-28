@@ -31,9 +31,10 @@ def generate_chunk(start: int, rows: int, seed: int) -> pd.DataFrame:
         2,
     )
     p_readmit = np.clip(0.04 + 0.08 * chronic + 0.05 * emergency + 0.01 * los, 0, 0.8)
-    event_date = pd.Timestamp("2023-01-01") + pd.to_timedelta(
-        rng.integers(0, 1095, size=rows), unit="D"
-    )
+    event_date = (
+        pd.Timestamp("2023-01-01")
+        + pd.to_timedelta(rng.integers(0, 1095, size=rows), unit="D")
+    ).date
     result = pd.DataFrame(
         {
             "encounter_id": encounter_id,
