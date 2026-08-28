@@ -18,6 +18,7 @@ def build_patient_gold(df):
         F.sum("readmitted_30d").alias("prior_readmissions"),
         F.round(F.avg("risk_score"), 3).alias("avg_risk_score"),
         F.max("high_utilization").alias("high_utilization"),
+        F.max("readmitted_30d").alias("readmitted_30d"),
     ).withColumn(
         "risk_segment",
         F.when(F.col("avg_risk_score") >= 0.70, "critical")
