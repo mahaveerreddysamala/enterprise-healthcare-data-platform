@@ -1,6 +1,6 @@
 # AWS Spark Benchmark Summary
 
-This document records the measured Spark benchmark progression, the 10M partition-tuning experiment, and the verified 50M scale benchmark for the synthetic healthcare workload.
+This document records the measured Spark benchmark progression, the 10M partition-tuning experiment, the verified 50M scale benchmark, and the leakage-free temporal readmission benchmark for the synthetic healthcare workload.
 
 ## Benchmark environment
 
@@ -99,6 +99,56 @@ The earlier `t3.micro` environment also exposed memory pressure and kernel OOM e
 ## AWS account constraint
 
 Attempts to resize the existing EC2 instance from `t3.small` to `t3.medium` and `t3.large` were rejected with `FreeTierRestrictionError`. The verified 50M benchmark was therefore completed on the existing `t3.small` configuration.
+
+## Temporal readmission ML benchmark
+
+A separate end-to-end ML validation was executed on the same EC2 environment using a chronological holdout. The Gold dataset was rebuilt after the feature-contract update so the model receives current-encounter features that are available at prediction time while historical aggregates remain derived only from prior encounters.
+
+### Dataset validation
+
+| Check | Result |
+|---|---:|
+| Gold rows | **198,666** |
+| Distinct patients | **198,666** |
+| Duplicate patient rows | **0** |
+| Gold columns | **18** |
+| Temporal cutoff | **2024-07-01** |
+| Training rows | **15,165** |
+| Test rows | **183,501** |
+
+### Final leakage-free readmission benchmark
+
+| Metric | Result |
+|---|---:|
+| ROC-AUC | **0.6601** |
+| PR-AUC | **0.1753** |
+| Precision | **0.1630** |
+| Recall | **0.6116** |
+| F1 | **0.2574** |
+
+Test-set class support was 164,664 negative observations and 18,837 positive observations. Because the positive class is relatively uncommon, PR-AUC, precision, recall, and F1 are reported alongside ROC-AUC rather than relying on accuracy alone.
+
+### Feature leakage correction
+
+The earlier experiment produced an implausible `ROC-AUC = 1.0` result because the evaluation dataset and feature availability were inconsistent with a realistic temporal prediction workflow. The corrected pipeline uses the following current-encounter fields together with historical aggregates:
+
+```text
+age
+current_chronic_condition
+current_emergency_visit
+current_length_of_stay
+current_risk_score
+encounter_count
+emergency_visits
+total_los
+avg_los
+total_cost
+prior_readmissions
+avg_risk_score
+high_utilization
+```
+
+`readmitted_30d` remains the prediction target, and `event_date` is used for chronological splitting. The current result of **ROC-AUC 0.6601** and **PR-AUC 0.1753** is the benchmark to use for portfolio reporting.
 
 ## Reproducibility
 
