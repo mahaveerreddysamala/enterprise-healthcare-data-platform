@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/mahaveerreddysamala/enterprise-healthcare-data-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/mahaveerreddysamala/enterprise-healthcare-data-platform/actions)
 
-A production-oriented **Senior Data Engineer + Senior Data Scientist** portfolio project for building a scalable healthcare data platform, analytics warehouse, distributed Spark processing pipeline, and machine-learning workflow using synthetic data.
+A production-oriented **Senior Data Scientist** portfolio project for building a scalable healthcare data platform, analytics warehouse, distributed Spark processing pipeline, and machine-learning workflow using synthetic data.
 
 > **Data policy:** synthetic data only. No real patients, PHI, or clinical records are included.
 
