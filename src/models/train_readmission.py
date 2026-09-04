@@ -56,7 +56,15 @@ def build_model() -> Pipeline:
     return Pipeline(
         [
             ("features", prep),
-            ("classifier", LogisticRegression(max_iter=1000, class_weight="balanced")),
+            (
+                "classifier",
+                LogisticRegression(
+                    max_iter=1000,
+                    class_weight="balanced",
+                    solver="liblinear",
+                    random_state=42,
+                ),
+            ),
         ]
     )
 
@@ -75,27 +83,21 @@ def _metrics(y: pd.Series, score) -> dict[str, float]:
 def train(
     input_path: str,
     model_path: str,
-    cutoff: str | None = None,
+    cutoff: str,
     time_column: str = "event_date",
 ) -> dict[str, float]:
     df = pd.read_parquet(input_path)
-    required = NUMERIC + CATEGORICAL + [TARGET]
-    if cutoff is not None:
-        required.append(time_column)
+    required = NUMERIC + CATEGORICAL + [TARGET, time_column]
     missing = [c for c in required if c not in df.columns]
     if missing:
         raise ValueError(f"Missing Gold ML columns: {missing}")
 
-    if cutoff is None:
-        train_df = df.copy()
-        test_df = df.copy()
-    else:
-        df[time_column] = pd.to_datetime(df[time_column])
-        cutoff_ts = pd.Timestamp(cutoff)
-        train_df = df[df[time_column] < cutoff_ts].copy()
-        test_df = df[df[time_column] >= cutoff_ts].copy()
-        if train_df.empty or test_df.empty:
-            raise ValueError("Chronological cutoff must leave rows on both sides")
+    df[time_column] = pd.to_datetime(df[time_column])
+    cutoff_ts = pd.Timestamp(cutoff)
+    train_df = df[df[time_column] < cutoff_ts].copy()
+    test_df = df[df[time_column] >= cutoff_ts].copy()
+    if train_df.empty or test_df.empty:
+        raise ValueError("Chronological cutoff must leave rows on both sides")
 
     model = build_model()
     X_train = train_df[NUMERIC + CATEGORICAL]
@@ -124,6 +126,6 @@ if __name__ == "__main__":
     parser.add_argument("--input", required=True)
     parser.add_argument("--model", default="artifacts/readmission_model.joblib")
     parser.add_argument("--time-column", default="event_date")
-    parser.add_argument("--cutoff")
+    parser.add_argument("--cutoff", required=True)
     args = parser.parse_args()
     print(train(args.input, args.model, args.cutoff, args.time_column))

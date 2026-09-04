@@ -18,11 +18,10 @@ def configure_spark(spark: SparkSession, shuffle_partitions: int = 200) -> Spark
 
 
 def normalize_events(df: DataFrame) -> DataFrame:
-    """Normalize event timestamps and remove obvious duplicate records."""
+    """Normalize the canonical event date and remove duplicate encounters."""
     return (
-        df.withColumn("event_ts", F.to_timestamp("event_ts"))
-        .withColumn("event_date", F.to_date("event_ts"))
-        .dropDuplicates(["event_id"])
+        df.withColumn("event_date", F.to_date("event_date"))
+        .dropDuplicates(["encounter_id"])
     )
 
 
