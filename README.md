@@ -432,6 +432,22 @@ and a portfolio-ready Markdown report under `artifacts/healthcare-spark-benchmar
 workload with `--rows` and `--partitions`. Pull-request CI runs a 10,000-row smoke profile and
 publishes `healthcare-spark-benchmark` as a downloadable workflow artifact.
 
+### Cohort-level model validation
+
+The readmission workflow evaluates held-out predictions across gender, risk segment, and age
+bands. It reports support, prevalence, ROC-AUC, PR-AUC, precision, recall, and F1 while marking
+small or single-class cohorts as unsupported instead of publishing misleading metrics.
+
+Run synthetic data preparation, Silver/Gold transformations, chronological model training,
+and cohort evaluation end to end:
+
+```bash
+python scripts/run_readmission_validation.py
+```
+
+Results are written under `artifacts/readmission-validation/` as JSON, CSV, and Markdown.
+The report is a model diagnostic on synthetic data, not a clinical fairness certification.
+
 ---
 
 ## 14. AWS Benchmark Reproduction
@@ -523,6 +539,7 @@ This implementation demonstrates end-to-end ownership of a cloud data platform, 
 | Docker assets | Reproducible test image included and built in CI |
 | CI automation | ✅ Included |
 | Downstream ML workflows | ✅ Included |
+| Cohort model diagnostics | ✅ Gender, risk-segment, and age-band evaluation |
 
 ---
 

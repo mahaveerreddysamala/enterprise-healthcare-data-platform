@@ -56,6 +56,11 @@ jobs:
           python benchmark/spark_healthcare_benchmark.py
           --rows 10000
           --partitions 2
+      - name: Run readmission cohort validation
+        run: >-
+          python scripts/run_readmission_validation.py
+          --rows 5000
+          --min-cohort-rows 50
       - name: Publish benchmark evidence
         uses: actions/upload-artifact@v4
         with:
@@ -63,3 +68,6 @@ jobs:
           path: |
             artifacts/healthcare-spark-benchmark/metrics.json
             artifacts/healthcare-spark-benchmark/report.md
+            artifacts/readmission-validation/readmission_metrics.json
+            artifacts/readmission-validation/readmission_cohorts.csv
+            artifacts/readmission-validation/readmission_cohorts.md

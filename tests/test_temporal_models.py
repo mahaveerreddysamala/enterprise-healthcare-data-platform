@@ -37,14 +37,23 @@ def _gold_frame(rows: int = 40) -> pd.DataFrame:
 def test_readmission_training_uses_chronological_holdout(tmp_path) -> None:
     data = tmp_path / "gold.parquet"
     model = tmp_path / "readmission.joblib"
+    cohorts = tmp_path / "readmission_cohorts.csv"
     _gold_frame().to_parquet(data, index=False)
 
-    metrics = train_readmission(str(data), str(model), "2024-01-21")
+    metrics = train_readmission(
+        str(data),
+        str(model),
+        "2024-01-21",
+        cohort_output=str(cohorts),
+        min_cohort_rows=4,
+    )
 
     assert metrics["train_rows"] == 20
     assert metrics["test_rows"] == 20
     assert 0.0 <= metrics["roc_auc"] <= 1.0
     assert model.is_file()
+    assert cohorts.is_file()
+    assert cohorts.with_suffix(".md").is_file()
 
 
 def test_cost_training_reports_holdout_metrics(tmp_path) -> None:
