@@ -1,4 +1,5 @@
-FROM python:3.11-slim
+# Bookworm retains OpenJDK 17, the Java runtime supported by Spark 3.5.x.
+FROM python:3.11-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
