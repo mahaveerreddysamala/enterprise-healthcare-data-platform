@@ -420,6 +420,18 @@ docker run --rm enterprise-healthcare-data-platform:test
 
 Start with the smaller synthetic workloads for local development before running cloud benchmarks.
 
+Run the same Spark generation, aggregation, and partitioned-Parquet workload used by the
+flagship benchmark locally with one command:
+
+```bash
+python benchmark/spark_healthcare_benchmark.py
+```
+
+The command defaults to one million synthetic rows and writes data, machine-readable metrics,
+and a portfolio-ready Markdown report under `artifacts/healthcare-spark-benchmark/`. Adjust the
+workload with `--rows` and `--partitions`. Pull-request CI runs a 10,000-row smoke profile and
+publishes `healthcare-spark-benchmark` as a downloadable workflow artifact.
+
 ---
 
 ## 14. AWS Benchmark Reproduction
