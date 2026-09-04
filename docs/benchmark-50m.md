@@ -23,7 +23,7 @@ The platform successfully processed **50,000,000 synthetic healthcare records** 
 Output:
 
 ```text
-s3a://mahaveer-healthcare-benchmark-560396669479/results/50m-t3small/
+s3a://<benchmark-bucket>/results/50m-t3small/
 ```
 
 ## S3 Layout

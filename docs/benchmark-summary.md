@@ -44,7 +44,7 @@ The 50M benchmark completed successfully on the same `t3.small` environment used
 Output location:
 
 ```text
-s3a://mahaveer-healthcare-benchmark-560396669479/results/50m-t3small
+s3a://<benchmark-bucket>/results/50m-t3small
 ```
 
 The verified S3 layout contains regional patient Parquet partitions for Midwest, Northeast, South, and West plus a summary output.

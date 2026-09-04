@@ -23,6 +23,6 @@ The sample follows the canonical healthcare event contract used by the platform:
 
 The measured 100K Spark benchmark is stored at:
 
-`s3://mahaveer-healthcare-benchmark-560396669479/results/100k/`
+`s3://<benchmark-bucket>/results/100k/`
 
 The benchmark output is partitioned by region in Parquet format and includes a summary dataset.

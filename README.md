@@ -12,11 +12,14 @@ Built with **Python, PySpark, Apache Spark, Amazon S3, Amazon EC2, AWS Systems M
 
 ## 1. Overview
 
-This repository implements a complete data engineering platform that converts high-volume healthcare events into governed, analytics-ready data products.
+This repository is a reference implementation of a healthcare data platform that converts
+synthetic healthcare events into governed, analytics-ready data products.
 
 The platform is designed around real-world engineering concerns: **data contracts, schema enforcement, quality validation, deduplication, partitioning, scalable Spark processing, dimensional modeling, orchestration, infrastructure as code, CI, and cloud performance troubleshooting**.
 
-The pipeline supports workloads from development scale through a validated **50 million-record AWS Spark benchmark**.
+The transformation modules support development-scale end-to-end runs. A separate, validated
+**50 million-record single-node AWS Spark benchmark** measures synthetic generation,
+aggregation, and partitioned Parquet writes to S3.
 
 ### Core pipeline
 
@@ -161,9 +164,13 @@ Key features include:
 
 ---
 
-## 5. Scale & AWS Performance Benchmark
+## 5. Single-Node AWS Spark Benchmark
 
 The platform was executed on AWS using **Amazon EC2 t3.small + Apache Spark 3.5.3 + Amazon S3**.
+
+The benchmark runs Spark on one EC2 instance with two vCPUs. It proves AWS execution,
+partition tuning, aggregation, and S3 output; it is not a multi-node cluster benchmark or a
+measurement of the complete Bronze → Silver → Gold → ML workflow.
 
 | Workload | Partitions | Runtime | Throughput | Result |
 |---|---:|---:|---:|---|
@@ -290,8 +297,8 @@ Operational patterns include:
 | **Amazon S3** | Data lake / Parquet storage |
 | **Amazon EC2** | Spark compute and benchmarking |
 | **AWS Systems Manager** | Remote execution |
-| **AWS Glue / Spark** | Distributed ETL architecture |
-| **Amazon Redshift** | Warehouse / dimensional analytics |
+| **AWS Glue** | Target deployment adaptation; not provisioned by this repository |
+| **Amazon Redshift** | Portable dimensional SQL target; not provisioned by this repository |
 | **Apache Airflow** | Orchestration and backfills |
 | **SQL** | Analytics and warehouse modeling |
 | **Terraform** | Infrastructure as code |
@@ -358,13 +365,15 @@ enterprise-healthcare-data-platform/
 ├── tests/                  # Unit and contract tests
 ├── data/sample/            # Representative synthetic data
 ├── infrastructure/         # Terraform / cloud assets
-├── docker/                 # Container assets
 ├── docs/                   # Architecture and technical documentation
 ├── scripts/                # Operational utilities
 ├── config/                 # Runtime configuration
 ├── .github/workflows/      # CI automation
+├── Dockerfile              # Reproducible Python/Spark test image
 ├── pyproject.toml
-└── requirements.txt
+├── requirements.txt
+├── requirements-airflow.txt
+└── requirements-mlops.txt
 ```
 
 ---
@@ -389,13 +398,55 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
+Install an optional integration only when needed:
+
+```bash
+pip install -r requirements-airflow.txt
+pip install -r requirements-mlops.txt
+```
+
 Run tests:
 
 ```bash
 pytest
 ```
 
+Run the same validation in Docker:
+
+```bash
+docker build -t enterprise-healthcare-data-platform:test .
+docker run --rm enterprise-healthcare-data-platform:test
+```
+
 Start with the smaller synthetic workloads for local development before running cloud benchmarks.
+
+Run the same Spark generation, aggregation, and partitioned-Parquet workload used by the
+flagship benchmark locally with one command:
+
+```bash
+python benchmark/spark_healthcare_benchmark.py
+```
+
+The command defaults to one million synthetic rows and writes data, machine-readable metrics,
+and a portfolio-ready Markdown report under `artifacts/healthcare-spark-benchmark/`. Adjust the
+workload with `--rows` and `--partitions`. Pull-request CI runs a 10,000-row smoke profile and
+publishes `healthcare-spark-benchmark` as a downloadable workflow artifact.
+
+### Cohort-level model validation
+
+The readmission workflow evaluates held-out predictions across gender, risk segment, and age
+bands. It reports support, prevalence, ROC-AUC, PR-AUC, precision, recall, and F1 while marking
+small or single-class cohorts as unsupported instead of publishing misleading metrics.
+
+Run synthetic data preparation, Silver/Gold transformations, chronological model training,
+and cohort evaluation end to end:
+
+```bash
+python scripts/run_readmission_validation.py
+```
+
+Results are written under `artifacts/readmission-validation/` as JSON, CSV, and Markdown.
+The report is a model diagnostic on synthetic data, not a clinical fairness certification.
 
 ---
 
@@ -466,7 +517,7 @@ This implementation demonstrates end-to-end ownership of a cloud data platform, 
 - Airflow orchestration
 - Spark performance benchmarking
 - Cloud infrastructure troubleshooting
-- Terraform and Docker practices
+- Terraform benchmark infrastructure and Docker-based validation
 - CI automation
 - Reusable analytics and ML-ready data products
 
@@ -481,16 +532,17 @@ This implementation demonstrates end-to-end ownership of a cloud data platform, 
 | Bronze/Silver/Gold processing | ✅ Implemented |
 | Data-quality validation | ✅ Implemented |
 | SQL / dimensional analytics | ✅ Implemented |
-| AWS Spark benchmark | ✅ Validated through 50M records |
+| AWS Spark benchmark | ✅ Single-node generation/aggregation/S3 path validated through 50M rows |
 | S3 Parquet output | ✅ Validated |
-| Airflow assets | ✅ Included |
-| Terraform assets | ✅ Included |
-| Docker assets | ✅ Included |
+| Airflow assets | DAG included; Airflow runtime is optional and not exercised in CI |
+| Terraform assets | EC2/S3 benchmark infrastructure included |
+| Docker assets | Reproducible test image included and built in CI |
 | CI automation | ✅ Included |
 | Downstream ML workflows | ✅ Included |
+| Cohort model diagnostics | ✅ Gender, risk-segment, and age-band evaluation |
 
 ---
 
 ## 17. Disclaimer
 
-This repository is an engineering implementation using synthetic healthcare data. It is intended to demonstrate cloud data platform architecture, distributed processing, data quality, analytics engineering, and operational practices. It does not contain real patient information and is not intended for clinical decision-making.
+This repository is an engineering implementation using synthetic healthcare data. It is intended to demonstrate cloud data platform architecture, PySpark processing, data quality, analytics engineering, and operational practices. It does not contain real patient information and is not intended for clinical decision-making.

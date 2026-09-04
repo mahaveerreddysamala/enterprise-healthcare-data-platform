@@ -1,10 +1,10 @@
 """Reusable data-quality checks for healthcare pipeline contracts."""
 from __future__ import annotations
 
-REQUIRED_COLUMNS = {
-    "encounter_id", "patient_id", "age", "chronic_condition",
-    "emergency_visit", "length_of_stay", "total_cost", "readmitted_30_days",
-}
+from src.contracts.canonical_schema import COLUMNS
+
+
+REQUIRED_COLUMNS = set(COLUMNS)
 
 
 def validate_columns(columns):
