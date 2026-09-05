@@ -1,0 +1,11 @@
+{
+  "cutoff": "2024-07-01",
+  "f1": 0.23721436343852012,
+  "pr_auc": 0.1375895726994528,
+  "precision": 0.157514450867052,
+  "recall": 0.4801762114537445,
+  "roc_auc": 0.6122626556334103,
+  "source": "deterministic 5,000-row synthetic validation run",
+  "test_rows": 2242,
+  "train_rows": 1669
+}

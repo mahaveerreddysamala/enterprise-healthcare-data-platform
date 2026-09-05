@@ -11,10 +11,10 @@ def test_dimensional_builders():
     spark = SparkSession.builder.master("local[2]").appName("test-dimensions").getOrCreate()
     try:
         rows = [
-            ("e1", "p1", "pr1", "f1", "2026-01-01 10:00:00", "I10", 0, 100.0, 42, "M", "TX", "PPO", "Cardiology"),
-            ("e2", "p1", "pr1", "f1", "2026-01-02 11:00:00", "E11", 1, 250.0, 42, "M", "TX", "PPO", "Cardiology"),
+            ("e1", "p1", "pr1", "f1", "2026-01-01", "I10", 0, 100.0, 42, "M", "commercial"),
+            ("e2", "p1", "pr1", "f1", "2026-01-02", "E11", 1, 250.0, 42, "M", "commercial"),
         ]
-        cols = ["event_id", "patient_id", "provider_id", "facility_id", "event_ts", "diagnosis_code", "readmitted_30_days", "total_cost", "age", "sex", "state", "insurance_type", "specialty"]
+        cols = ["encounter_id", "patient_id", "provider_id", "facility_id", "event_date", "diagnosis_code", "readmitted_30d", "total_cost", "age", "gender", "payer_type"]
         df = spark.createDataFrame(rows, cols)
         assert build_dim_patient(df).count() == 1
         assert build_dim_provider(df).count() == 1

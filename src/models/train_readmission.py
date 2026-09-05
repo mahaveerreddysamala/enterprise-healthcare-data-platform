@@ -26,6 +26,12 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.models.feature_contract import CATEGORICAL, NUMERIC, TARGET
+from src.models.cohort_evaluation import (
+    DEFAULT_DIMENSIONS,
+    add_default_cohorts,
+    evaluate_cohorts,
+    write_cohort_evidence,
+)
 
 
 def build_model() -> Pipeline:
@@ -56,7 +62,15 @@ def build_model() -> Pipeline:
     return Pipeline(
         [
             ("features", prep),
-            ("classifier", LogisticRegression(max_iter=1000, class_weight="balanced")),
+            (
+                "classifier",
+                LogisticRegression(
+                    max_iter=1000,
+                    class_weight="balanced",
+                    solver="liblinear",
+                    random_state=42,
+                ),
+            ),
         ]
     )
 
@@ -75,27 +89,23 @@ def _metrics(y: pd.Series, score) -> dict[str, float]:
 def train(
     input_path: str,
     model_path: str,
-    cutoff: str | None = None,
+    cutoff: str,
     time_column: str = "event_date",
-) -> dict[str, float]:
+    cohort_output: str | None = None,
+    min_cohort_rows: int = 50,
+) -> dict[str, float | int]:
     df = pd.read_parquet(input_path)
-    required = NUMERIC + CATEGORICAL + [TARGET]
-    if cutoff is not None:
-        required.append(time_column)
+    required = NUMERIC + CATEGORICAL + [TARGET, time_column]
     missing = [c for c in required if c not in df.columns]
     if missing:
         raise ValueError(f"Missing Gold ML columns: {missing}")
 
-    if cutoff is None:
-        train_df = df.copy()
-        test_df = df.copy()
-    else:
-        df[time_column] = pd.to_datetime(df[time_column])
-        cutoff_ts = pd.Timestamp(cutoff)
-        train_df = df[df[time_column] < cutoff_ts].copy()
-        test_df = df[df[time_column] >= cutoff_ts].copy()
-        if train_df.empty or test_df.empty:
-            raise ValueError("Chronological cutoff must leave rows on both sides")
+    df[time_column] = pd.to_datetime(df[time_column])
+    cutoff_ts = pd.Timestamp(cutoff)
+    train_df = df[df[time_column] < cutoff_ts].copy()
+    test_df = df[df[time_column] >= cutoff_ts].copy()
+    if train_df.empty or test_df.empty:
+        raise ValueError("Chronological cutoff must leave rows on both sides")
 
     model = build_model()
     X_train = train_df[NUMERIC + CATEGORICAL]
@@ -116,6 +126,23 @@ def train(
     print(classification_report(y_test, (score >= 0.5).astype(int), zero_division=0))
     Path(model_path).parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, model_path)
+    if cohort_output:
+        cohort_frame = add_default_cohorts(test_df)
+        cohort_results = evaluate_cohorts(
+            cohort_frame,
+            y_test.to_numpy(),
+            score,
+            DEFAULT_DIMENSIONS,
+            min_rows=min_cohort_rows,
+        )
+        report_path = write_cohort_evidence(
+            cohort_results,
+            Path(cohort_output),
+            threshold=0.5,
+            min_rows=min_cohort_rows,
+        )
+        print(f"Cohort metrics written to: {cohort_output}")
+        print(f"Cohort report written to: {report_path}")
     return metrics
 
 
@@ -124,6 +151,17 @@ if __name__ == "__main__":
     parser.add_argument("--input", required=True)
     parser.add_argument("--model", default="artifacts/readmission_model.joblib")
     parser.add_argument("--time-column", default="event_date")
-    parser.add_argument("--cutoff")
+    parser.add_argument("--cutoff", required=True)
+    parser.add_argument("--cohort-output", default="artifacts/readmission_cohorts.csv")
+    parser.add_argument("--min-cohort-rows", type=int, default=50)
     args = parser.parse_args()
-    print(train(args.input, args.model, args.cutoff, args.time_column))
+    print(
+        train(
+            args.input,
+            args.model,
+            args.cutoff,
+            args.time_column,
+            args.cohort_output,
+            args.min_cohort_rows,
+        )
+    )

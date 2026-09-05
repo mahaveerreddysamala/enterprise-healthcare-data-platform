@@ -15,27 +15,25 @@ CREATE TABLE dim_patient (
     patient_sk BIGINT PRIMARY KEY,
     patient_id VARCHAR(64) NOT NULL,
     age INTEGER,
-    sex VARCHAR(16),
-    state VARCHAR(64),
-    insurance_type VARCHAR(64)
+    gender VARCHAR(16),
+    payer_type VARCHAR(64)
 );
 
 CREATE TABLE dim_provider (
     provider_sk BIGINT PRIMARY KEY,
     provider_id VARCHAR(64) NOT NULL,
-    specialty VARCHAR(128),
     facility_id VARCHAR(64)
 );
 
 CREATE TABLE fact_encounter (
-    event_id VARCHAR(64) PRIMARY KEY,
+    encounter_id VARCHAR(64) PRIMARY KEY,
     patient_sk BIGINT NOT NULL,
     provider_sk BIGINT,
     date_sk INTEGER NOT NULL,
     facility_id VARCHAR(64),
-    event_ts TIMESTAMP NOT NULL,
+    event_date DATE NOT NULL,
     diagnosis_code VARCHAR(32),
-    readmitted_30_days INTEGER,
+    readmitted_30d INTEGER,
     total_cost DECIMAL(14,2),
     encounter_count INTEGER NOT NULL
 );

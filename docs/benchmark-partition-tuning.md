@@ -35,10 +35,10 @@ This does not mean fewer partitions are universally better. Partition sizing dep
 Each run wrote partitioned Parquet results to Amazon S3:
 
 ```text
-s3://mahaveer-healthcare-benchmark-560396669479/results/10m-t3small/
-s3://mahaveer-healthcare-benchmark-560396669479/results/10m-p4-t3small/
-s3://mahaveer-healthcare-benchmark-560396669479/results/10m-p8-t3small/
-s3://mahaveer-healthcare-benchmark-560396669479/results/10m-p16-t3small/
+s3://<benchmark-bucket>/results/10m-t3small/
+s3://<benchmark-bucket>/results/10m-p4-t3small/
+s3://<benchmark-bucket>/results/10m-p8-t3small/
+s3://<benchmark-bucket>/results/10m-p16-t3small/
 ```
 
 ## Interview Takeaway
