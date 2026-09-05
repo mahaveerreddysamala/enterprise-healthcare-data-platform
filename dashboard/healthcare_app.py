@@ -9,7 +9,11 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.dashboard import executive_kpis, load_dashboard_snapshot  # noqa: E402
+from src.dashboard import (  # noqa: E402
+    cohort_governance_summary,
+    executive_kpis,
+    load_dashboard_snapshot,
+)
 
 st.set_page_config(page_title="Enterprise Healthcare Data Platform", page_icon="🏥", layout="wide")
 
@@ -21,6 +25,7 @@ def load_snapshot():
 
 snapshot = load_snapshot()
 kpis = executive_kpis(snapshot)
+governance = cohort_governance_summary(snapshot.cohorts)
 
 st.title("Enterprise Healthcare Data Platform")
 st.caption(
@@ -119,6 +124,43 @@ with model_tab:
         ],
         hide_index=True,
         width="stretch",
+    )
+
+    st.subheader("Subgroup governance summary")
+    total_cohorts = int(governance["total_cohorts"].sum())
+    supported_cohorts = int(governance["supported_cohorts"].sum())
+    widest_pr_auc = governance.loc[governance["pr_auc_range"].idxmax()]
+    widest_recall = governance.loc[governance["recall_range"].idxmax()]
+    governance_columns = st.columns(4)
+    governance_columns[0].metric(
+        "Supported cohorts", f"{supported_cohorts}/{total_cohorts}"
+    )
+    governance_columns[1].metric(
+        "Minimum row coverage", f'{governance["supported_row_coverage"].min():.1%}'
+    )
+    governance_columns[2].metric(
+        "Widest PR-AUC range",
+        f'{widest_pr_auc["pr_auc_range"]:.4f}',
+        help=f'Dimension: {widest_pr_auc["dimension"]}',
+    )
+    governance_columns[3].metric(
+        "Widest recall range",
+        f'{widest_recall["recall_range"]:.4f}',
+        help=f'Dimension: {widest_recall["dimension"]}',
+    )
+    st.dataframe(
+        governance,
+        hide_index=True,
+        width="stretch",
+        column_config={
+            "supported_row_coverage": st.column_config.NumberColumn(format="percent"),
+            "pr_auc_range": st.column_config.NumberColumn(format="%.4f"),
+            "recall_range": st.column_config.NumberColumn(format="%.4f"),
+        },
+    )
+    st.caption(
+        "Ranges are descriptive synthetic-data diagnostics across supported cohorts. "
+        "Unsupported cohorts remain visible and are excluded from range calculations."
     )
     st.warning(
         "Cohort metrics diagnose synthetic model behavior. They are not a clinical fairness "

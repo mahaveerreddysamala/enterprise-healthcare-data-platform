@@ -26,7 +26,9 @@ aggregation, and partitioned Parquet writes to S3.
 [**Open the live Healthcare Data Platform dashboard**](https://healthcare-data-platform.streamlit.app/)
 
 The Streamlit dashboard brings together the verified AWS scale results, canonical sample
-quality, Bronze/Silver/Gold flow, chronological model metrics, and cohort diagnostics.
+quality, Bronze/Silver/Gold flow, chronological model metrics, and cohort diagnostics. Its
+subgroup-governance summary reports supported-cohort coverage plus PR-AUC and recall ranges
+while retaining unsupported slices for transparent review.
 
 ```bash
 pip install -r requirements-dashboard.txt
