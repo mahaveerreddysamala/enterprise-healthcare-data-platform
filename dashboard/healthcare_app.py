@@ -9,11 +9,8 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.dashboard import (  # noqa: E402
-    cohort_governance_summary,
-    executive_kpis,
-    load_dashboard_snapshot,
-)
+from src.dashboard import executive_kpis, load_dashboard_snapshot  # noqa: E402
+from src.model_governance import cohort_governance_summary  # noqa: E402
 
 st.set_page_config(page_title="Enterprise Healthcare Data Platform", page_icon="🏥", layout="wide")
 
