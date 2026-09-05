@@ -5,11 +5,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from src.dashboard import (
-    cohort_governance_summary,
-    executive_kpis,
-    load_dashboard_snapshot,
-)
+from src.dashboard import executive_kpis, load_dashboard_snapshot
+from src.model_governance import cohort_governance_summary
 
 ROOT = Path(__file__).parents[1]
 
