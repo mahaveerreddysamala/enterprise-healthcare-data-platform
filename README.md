@@ -21,6 +21,20 @@ The transformation modules support development-scale end-to-end runs. A separate
 **50 million-record single-node AWS Spark benchmark** measures synthetic generation,
 aggregation, and partitioned Parquet writes to S3.
 
+## Interactive Portfolio Dashboard
+
+The Streamlit dashboard brings together the verified AWS scale results, canonical sample
+quality, Bronze/Silver/Gold flow, chronological model metrics, and cohort diagnostics.
+
+```bash
+pip install -r requirements-dashboard.txt
+streamlit run dashboard/healthcare_app.py
+```
+
+It uses committed synthetic evidence snapshots so it opens quickly without cloud credentials
+or a long Spark run. The underlying benchmarks remain reproducible through the documented CLI
+commands, and GitHub Actions executes the dashboard headlessly on every pull request.
+
 ### Core pipeline
 
 ```text
@@ -363,6 +377,7 @@ enterprise-healthcare-data-platform/
 ├── pipelines/              # Pipeline entry points
 ├── sql/                    # Dimensional and analytics SQL
 ├── tests/                  # Unit and contract tests
+├── dashboard/              # Interactive portfolio dashboard and evidence snapshots
 ├── data/sample/            # Representative synthetic data
 ├── infrastructure/         # Terraform / cloud assets
 ├── docs/                   # Architecture and technical documentation
