@@ -1,5 +1,9 @@
 # Next milestone: prediction-time and label-availability audit
 
+**Implementation update:** The synthetic discharge-time contract, maturity-aware splits,
+boundary tests and paired execution are now documented in [label maturity](label-maturity.md).
+The review below is retained as the original motivation and proposed scope.
+
 ## Review scope
 
 Reviewed the repository's README, Gold transformation, feature contract, chronological

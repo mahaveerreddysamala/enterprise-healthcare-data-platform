@@ -20,14 +20,16 @@ def test_dashboard_loads_validated_benchmark_and_model_evidence() -> None:
     assert set(snapshot.cohorts["dimension"]) == {"gender", "risk_segment", "age_band"}
     assert snapshot.sample_quality["null_cells"] == 0
     assert kpis["Largest Spark run"] == "50,000,000"
-    assert kpis["Readmission PR-AUC"] == "0.1376"
+    assert kpis["Readmission PR-AUC"] == "0.1777"
+    assert snapshot.model_metrics["train_pending_rows"] == 421
+    assert snapshot.model_metrics["test_pending_rows"] == 562
 
     governance = cohort_governance_summary(snapshot.cohorts)
     assert set(governance["dimension"]) == {"gender", "risk_segment", "age_band"}
     assert governance["supported_row_coverage"].between(0.0, 1.0).all()
     assert governance["pr_auc_range"].ge(0.0).all()
     gender = governance.loc[governance["dimension"].eq("gender")].iloc[0]
-    assert gender["supported_cohorts"] == 2
+    assert gender["supported_cohorts"] == 3
     assert gender["total_cohorts"] == 3
 
 

@@ -18,7 +18,8 @@ from src.transformations.gold import build_patient_gold
 from src.transformations.silver import SCHEMA, transform
 
 
-def run(rows: int, cutoff: str, output_dir: Path, min_cohort_rows: int) -> dict[str, float | int]:
+def run(rows: int, cutoff: str, output_dir: Path, min_cohort_rows: int,
+        evaluation_as_of: str | None = None) -> dict:
     """Execute the local synthetic model-validation path and persist evidence."""
     if rows <= 0:
         raise ValueError("rows must be positive")
@@ -49,6 +50,7 @@ def run(rows: int, cutoff: str, output_dir: Path, min_cohort_rows: int) -> dict[
         cutoff,
         cohort_output=str(cohort_path),
         min_cohort_rows=min_cohort_rows,
+        evaluation_as_of=evaluation_as_of,
     )
     metrics_path.write_text(json.dumps(metrics, indent=2, sort_keys=True), encoding="utf-8")
     return metrics
@@ -59,9 +61,11 @@ def main() -> None:
     parser.add_argument("--rows", type=int, default=20_000)
     parser.add_argument("--cutoff", default="2024-07-01")
     parser.add_argument("--min-cohort-rows", type=int, default=50)
+    parser.add_argument("--evaluation-as-of", help="Defaults to latest observed discharge date")
     parser.add_argument("--output-dir", type=Path, default=Path("artifacts/readmission-validation"))
     args = parser.parse_args()
-    metrics = run(args.rows, args.cutoff, args.output_dir, args.min_cohort_rows)
+    metrics = run(args.rows, args.cutoff, args.output_dir, args.min_cohort_rows,
+                  args.evaluation_as_of)
     print(json.dumps(metrics, indent=2, sort_keys=True))
     print(f"Validation evidence written to: {args.output_dir}")
 

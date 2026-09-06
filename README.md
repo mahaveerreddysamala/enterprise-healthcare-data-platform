@@ -23,6 +23,10 @@ aggregation, and partitioned Parquet writes to S3.
 
 ## Interactive Portfolio Dashboard
 
+The [label-maturity correction](docs/label-maturity.md) defines discharge-time prediction,
+outcome availability and measured exclusions. See the [resume and interview guide](docs/portfolio-interview-guide.md)
+for evidence-backed descriptions of both portfolio projects.
+
 [**Open the live Healthcare Data Platform dashboard**](https://healthcare-data-platform.streamlit.app/)
 
 The Streamlit dashboard brings together the verified AWS scale results, canonical sample
@@ -358,7 +362,11 @@ The Gold layer supports:
 | Healthcare cost | HistGradientBoostingRegressor | MAE, RMSE, R² |
 | Patient segmentation | MiniBatchKMeans | Cluster size and profiles |
 
-The validated temporal readmission workflow achieved **0.6601 ROC-AUC** and **0.1753 PR-AUC** on an EC2 holdout at `2024-07-01`, with historical features restricted to prior encounters to reduce temporal leakage.
+The historical EC2 workflow reported **0.6601 ROC-AUC** and **0.1753 PR-AUC** before explicit
+label-maturity handling. The corrected local 20K synthetic run reports **0.6753 ROC-AUC** and
+**0.1777 PR-AUC**, excluding 421 immature training and 562 immature holdout labels.
+These are different runs and populations; they are not a measured performance improvement.
+See [the paired protocol comparison](docs/label-maturity.md) for an appropriate baseline.
 
 > ML outputs are engineering/analytics examples and are not clinical diagnoses or treatment recommendations.
 
