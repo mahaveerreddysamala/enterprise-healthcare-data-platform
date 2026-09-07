@@ -1,0 +1,52 @@
+{
+  "rows_generated": 20000,
+  "seed": 42,
+  "baseline_commit": "71009fb466d6bcbf5dc71544f3b2d6507e7e69d5",
+  "raw_data_equal": true,
+  "gold_rows": 15800,
+  "patients_with_changed_prior_readmissions": 23,
+  "pending_historical_outcomes": 187,
+  "baseline": {
+    "f1": 0.26815897670169025,
+    "pr_auc": 0.18186427589062804,
+    "precision": 0.1694083694083694,
+    "recall": 0.6429353778751369,
+    "roc_auc": 0.6751433274950827,
+    "test_rows": 8885,
+    "train_rows": 6915,
+    "brier_score": 0.2299192917877312,
+    "train_prevalence": 0.1005061460592914,
+    "test_prevalence": 0.10275745638716939
+  },
+  "corrected": {
+    "after_snapshot_rows": 0,
+    "availability_source": "explicit",
+    "brier_score": 0.23103400067120414,
+    "evaluation_as_of": "2025-12-30T00:00:00+00:00",
+    "f1": 0.26531620553359686,
+    "fit_cutoff": "2024-07-01T00:00:00+00:00",
+    "label_contract": "synthetic_discharge_plus_30_days",
+    "pr_auc": 0.17773631267025541,
+    "precision": 0.1673940149625935,
+    "recall": 0.6392857142857142,
+    "roc_auc": 0.6752568520392255,
+    "test_pending_rows": 562,
+    "test_prevalence": 0.10092514718250631,
+    "test_rows": 8323,
+    "train_pending_rows": 421,
+    "train_prevalence": 0.10178626424391746,
+    "train_rows": 6494
+  },
+  "python": "3.12.13",
+  "versions": {
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "pyspark": "3.5.3",
+    "scikit-learn": "1.5.2"
+  },
+  "source_sha256": {
+    "src/transformations/gold.py": "a7ed81f49adf4596adb6d5f2d1dde13ede12f82bdb6391bf8905553a31444b05",
+    "src/models/label_availability.py": "0fdf7667cf7e828f7566f5b08d35a774d275ba621c58150660a8e6a6a75b11f4",
+    "src/models/train_readmission.py": "ec9241dcd693d72bcc4de07f3433147ba964eecfa13c657d795c0864b823bed6"
+  }
+}

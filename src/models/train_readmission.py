@@ -12,6 +12,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     average_precision_score,
+    brier_score_loss,
     classification_report,
     f1_score,
     precision_score,
@@ -26,6 +27,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.models.feature_contract import CATEGORICAL, NUMERIC, TARGET
+from src.models.label_availability import available_split
 from src.models.cohort_evaluation import (
     DEFAULT_DIMENSIONS,
     add_default_cohorts,
@@ -83,6 +85,7 @@ def _metrics(y: pd.Series, score) -> dict[str, float]:
         "precision": float(precision_score(y, pred, zero_division=0)),
         "recall": float(recall_score(y, pred, zero_division=0)),
         "f1": float(f1_score(y, pred, zero_division=0)),
+        "brier_score": float(brier_score_loss(y, score)),
     }
 
 
@@ -93,19 +96,17 @@ def train(
     time_column: str = "event_date",
     cohort_output: str | None = None,
     min_cohort_rows: int = 50,
-) -> dict[str, float | int]:
+    evaluation_as_of: str | None = None,
+) -> dict[str, float | int | str]:
     df = pd.read_parquet(input_path)
     required = NUMERIC + CATEGORICAL + [TARGET, time_column]
     missing = [c for c in required if c not in df.columns]
     if missing:
         raise ValueError(f"Missing Gold ML columns: {missing}")
 
-    df[time_column] = pd.to_datetime(df[time_column])
-    cutoff_ts = pd.Timestamp(cutoff)
-    train_df = df[df[time_column] < cutoff_ts].copy()
-    test_df = df[df[time_column] >= cutoff_ts].copy()
+    train_df, test_df, coverage = available_split(df, cutoff, time_column, evaluation_as_of)
     if train_df.empty or test_df.empty:
-        raise ValueError("Chronological cutoff must leave rows on both sides")
+        raise ValueError("Chronological cutoff must leave mature rows on both sides")
 
     model = build_model()
     X_train = train_df[NUMERIC + CATEGORICAL]
@@ -120,8 +121,9 @@ def train(
     score = model.predict_proba(X_test)[:, 1]
     metrics = {
         **_metrics(y_test, score),
-        "train_rows": int(len(train_df)),
-        "test_rows": int(len(test_df)),
+        **coverage,
+        "train_prevalence": float(y_train.mean()),
+        "test_prevalence": float(y_test.mean()),
     }
     print(classification_report(y_test, (score >= 0.5).astype(int), zero_division=0))
     Path(model_path).parent.mkdir(parents=True, exist_ok=True)
@@ -154,6 +156,7 @@ if __name__ == "__main__":
     parser.add_argument("--cutoff", required=True)
     parser.add_argument("--cohort-output", default="artifacts/readmission_cohorts.csv")
     parser.add_argument("--min-cohort-rows", type=int, default=50)
+    parser.add_argument("--evaluation-as-of", help="Observation snapshot; defaults to latest event date")
     args = parser.parse_args()
     print(
         train(
@@ -163,5 +166,6 @@ if __name__ == "__main__":
             args.time_column,
             args.cohort_output,
             args.min_cohort_rows,
+            args.evaluation_as_of,
         )
     )

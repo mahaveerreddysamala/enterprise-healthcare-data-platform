@@ -11,7 +11,8 @@ def build_patient_gold(df):
 
     The latest encounter supplies features that are known at prediction time,
     the prediction timestamp, and the target. Historical aggregates are built
-    only from earlier encounters to avoid target leakage.
+    only from strictly earlier discharge dates. Synthetic outcomes mature after
+    30 days; same-day ordering does not imply information availability.
     """
     window = Window.partitionBy("patient_id").orderBy(
         F.col("event_date").desc(), F.col("encounter_id").desc()
@@ -21,6 +22,8 @@ def build_patient_gold(df):
     latest = ordered.filter(F.col("_rn") == 1).select(
         "patient_id",
         F.col("event_date").alias("event_date"),
+        F.col("event_date").alias("prediction_time"),
+        F.date_add("event_date", 30).alias("label_available_at"),
         F.col("age").alias("age"),
         F.col("gender").alias("gender"),
         F.col("chronic_condition").alias("current_chronic_condition"),
@@ -30,13 +33,20 @@ def build_patient_gold(df):
         F.col("readmitted_30d").alias("readmitted_30d"),
     )
 
-    history = ordered.filter(F.col("_rn") > 1).groupBy("patient_id").agg(
+    prior = ordered.filter(F.col("_rn") > 1).join(
+        latest.select("patient_id", F.col("prediction_time").alias("_as_of")),
+        on="patient_id",
+    ).filter(F.col("event_date") < F.col("_as_of"))
+    mature = F.date_add("event_date", 30) <= F.col("_as_of")
+    history = prior.groupBy("patient_id").agg(
         F.countDistinct("encounter_id").alias("encounter_count"),
         F.sum("emergency_visit").alias("emergency_visits"),
         F.sum("length_of_stay").alias("total_los"),
         F.round(F.avg("length_of_stay"), 2).alias("avg_los"),
         F.round(F.sum("total_cost"), 2).alias("total_cost"),
-        F.sum("readmitted_30d").alias("prior_readmissions"),
+        F.sum(F.when(mature, F.col("readmitted_30d"))).alias("prior_readmissions"),
+        F.sum(F.when(mature, 1).otherwise(0)).alias("mature_history_count"),
+        F.sum(F.when(~mature, 1).otherwise(0)).alias("pending_history_count"),
         F.round(F.avg("risk_score"), 3).alias("avg_risk_score"),
         F.max("high_utilization").alias("high_utilization"),
     )
@@ -44,6 +54,8 @@ def build_patient_gold(df):
     result = latest.join(history, on="patient_id", how="left").select(
         "patient_id",
         "event_date",
+        "prediction_time",
+        "label_available_at",
         "age",
         "gender",
         "current_chronic_condition",
@@ -56,6 +68,8 @@ def build_patient_gold(df):
         F.coalesce(F.col("avg_los"), F.lit(0.0)).alias("avg_los"),
         F.coalesce(F.col("total_cost"), F.lit(0.0)).alias("total_cost"),
         F.coalesce(F.col("prior_readmissions"), F.lit(0)).cast("long").alias("prior_readmissions"),
+        F.coalesce(F.col("mature_history_count"), F.lit(0)).cast("long").alias("mature_history_count"),
+        F.coalesce(F.col("pending_history_count"), F.lit(0)).cast("long").alias("pending_history_count"),
         F.coalesce(F.col("avg_risk_score"), F.lit(0.0)).alias("avg_risk_score"),
         F.coalesce(F.col("high_utilization"), F.lit(0)).cast("int").alias("high_utilization"),
         "readmitted_30d",

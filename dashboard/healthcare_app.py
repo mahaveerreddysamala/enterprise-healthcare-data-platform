@@ -94,6 +94,13 @@ with quality_tab:
 
 with model_tab:
     st.subheader("Chronological readmission evaluation")
+    st.caption(snapshot.model_metrics["source"])
+    st.info(
+        f'Prediction at discharge; outcomes mature after 30 days. '
+        f'Excluded at fit cutoff: {snapshot.model_metrics["train_pending_rows"]:,} pending labels. '
+        f'Excluded from holdout: {snapshot.model_metrics["test_pending_rows"]:,} pending labels. '
+        f'Evaluation snapshot: {snapshot.model_metrics["evaluation_as_of"]}.'
+    )
     model_columns = st.columns(5)
     for column, metric in zip(
         model_columns, ["roc_auc", "pr_auc", "precision", "recall", "f1"], strict=True

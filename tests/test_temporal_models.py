@@ -13,7 +13,7 @@ def _gold_frame(rows: int = 40) -> pd.DataFrame:
     index = np.arange(rows)
     return pd.DataFrame(
         {
-            "event_date": pd.date_range("2024-01-01", periods=rows, freq="D"),
+            "event_date": pd.date_range("2024-01-01", periods=rows, freq="3D"),
             "age": 30 + index,
             "current_chronic_condition": index % 2,
             "current_emergency_visit": (index // 2) % 2,
@@ -43,13 +43,15 @@ def test_readmission_training_uses_chronological_holdout(tmp_path) -> None:
     metrics = train_readmission(
         str(data),
         str(model),
-        "2024-01-21",
+        "2024-03-01",
         cohort_output=str(cohorts),
         min_cohort_rows=4,
     )
 
-    assert metrics["train_rows"] == 20
-    assert metrics["test_rows"] == 20
+    assert metrics["train_rows"] == 10
+    assert metrics["test_rows"] == 10
+    assert metrics["train_pending_rows"] == 10
+    assert metrics["test_pending_rows"] == 10
     assert 0.0 <= metrics["roc_auc"] <= 1.0
     assert model.is_file()
     assert cohorts.is_file()
@@ -61,7 +63,7 @@ def test_cost_training_reports_holdout_metrics(tmp_path) -> None:
     model = tmp_path / "cost.joblib"
     _gold_frame().to_parquet(data, index=False)
 
-    metrics = train_cost(str(data), str(model), "2024-01-21")
+    metrics = train_cost(str(data), str(model), "2024-03-01")
 
     assert metrics["train_rows"] == 20
     assert metrics["test_rows"] == 20
@@ -70,7 +72,7 @@ def test_cost_training_reports_holdout_metrics(tmp_path) -> None:
 
 
 def test_nonlinear_readmission_baseline_uses_chronological_holdout() -> None:
-    _, metrics = train_readmission_model(_gold_frame(), "2024-01-21")
+    _, metrics = train_readmission_model(_gold_frame(), "2024-03-01")
 
     assert 0.0 <= metrics["roc_auc"] <= 1.0
     assert 0.0 <= metrics["pr_auc"] <= 1.0
@@ -81,5 +83,5 @@ def test_temporal_training_rejects_empty_split(tmp_path, trainer) -> None:
     data = tmp_path / "gold.parquet"
     _gold_frame().to_parquet(data, index=False)
 
-    with pytest.raises(ValueError, match="both sides"):
+    with pytest.raises(ValueError, match="both sides|snapshot"):
         trainer(str(data), str(tmp_path / "model.joblib"), "2030-01-01")
