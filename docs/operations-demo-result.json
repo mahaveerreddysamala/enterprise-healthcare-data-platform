@@ -1,0 +1,83 @@
+{
+  "started_at": "2026-09-11T13:25:22.946135+00:00",
+  "status": "passed",
+  "synthetic": true,
+  "execution": "local[2]",
+  "rows_requested": 5000,
+  "stages": [
+    {
+      "name": "generate_bronze",
+      "status": "passed",
+      "elapsed_seconds": 0.065
+    },
+    {
+      "name": "start_spark",
+      "status": "passed",
+      "elapsed_seconds": 6.289
+    },
+    {
+      "name": "validate_bronze",
+      "status": "passed",
+      "elapsed_seconds": 9.859
+    },
+    {
+      "name": "build_and_validate_silver",
+      "status": "passed",
+      "elapsed_seconds": 2.577
+    },
+    {
+      "name": "write_and_validate_gold",
+      "status": "passed",
+      "elapsed_seconds": 6.687
+    },
+    {
+      "name": "train_and_evaluate",
+      "status": "passed",
+      "elapsed_seconds": 0.273
+    }
+  ],
+  "quality": {
+    "bronze": {
+      "row_count": 5000,
+      "duplicate_encounters": 0,
+      "null_cells": 0,
+      "invalid_age": 0,
+      "negative_cost": 0,
+      "invalid_target": 0
+    },
+    "silver": {
+      "row_count": 5000,
+      "duplicate_encounters": 0,
+      "null_cells": 0,
+      "invalid_age": 0,
+      "negative_cost": 0,
+      "invalid_target": 0
+    },
+    "gold": {
+      "row_count": 3911,
+      "duplicate_patients": 0
+    }
+  },
+  "lineage": [
+    {
+      "input": "seed42 generator",
+      "output": "bronze"
+    },
+    {
+      "input": "bronze",
+      "output": "silver",
+      "transform": "transform"
+    },
+    {
+      "input": "silver",
+      "output": "gold",
+      "transform": "build_patient_gold"
+    },
+    {
+      "input": "gold",
+      "output": "model + cohort metrics"
+    }
+  ],
+  "stage_elapsed_seconds": 25.75,
+  "rows_per_stage_second": 194.1747572815534
+}

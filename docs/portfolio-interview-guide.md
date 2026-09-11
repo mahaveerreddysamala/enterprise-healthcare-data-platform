@@ -4,6 +4,10 @@
 
 **Financial Risk Intelligence**
 
+- Connected synthetic transaction scoring, case evidence and local Ollama generation into a
+  reproducible analyst-brief workflow; evaluated citations, abstention and latency while
+  retaining failed model outputs for review. See the financial repository's local RAG report.
+
 - Built a synthetic financial-investigation copilot with TF-IDF and pinned CPU MiniLM retrieval,
   cited case evidence, explicit evidence-availability checks and automated dashboard tests.
 - Evaluated retrieval on authored challenge sets; reduced TF-IDF unsupported acceptance from
@@ -11,6 +15,11 @@
   and rejected a threshold change that failed separate-question validation.
 
 **Enterprise Healthcare Data Platform**
+
+- Added Spark data-quality gates, stage-level failure reporting and lineage manifests; executed
+  a 5,000-event local pipeline producing 3,911 unique patient records and tested recovery isolation.
+- Executed a historical 50M-row synthetic Spark generation/aggregation workload on one EC2
+  instance with S3 output in 156.294 seconds (319,909 rows/sec), as documented in benchmark evidence.
 
 - Developed a synthetic healthcare data platform with Spark Bronze/Silver/Gold processing,
   schema and quality contracts, chronological readmission evaluation and cohort diagnostics.

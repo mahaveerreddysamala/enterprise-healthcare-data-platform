@@ -71,6 +71,7 @@ jobs:
             artifacts/readmission-validation/readmission_metrics.json
             artifacts/readmission-validation/readmission_cohorts.csv
             artifacts/readmission-validation/readmission_cohorts.md
+            artifacts/readmission-validation/pipeline-run.json
 
   dashboard:
     runs-on: ubuntu-latest
