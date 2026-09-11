@@ -25,6 +25,8 @@ See the [two-minute demo, DAG graph and operational contract](docs/operational-d
 [prepared multi-node experiment](docs/multi-node-experiment.md). No multi-node speedup or
 production SLA is claimed until the corresponding execution evidence exists.
 
+**New local execution evidence:** [one million rows, one versus two standalone workers, and a verified task retry](docs/local-worker-experiment.md). All workers share one machine; the AWS multi-node experiment remains optional.
+
 This repository is a reference implementation of a healthcare data platform that converts
 synthetic healthcare events into governed, analytics-ready data products.
 
