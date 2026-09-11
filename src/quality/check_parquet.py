@@ -24,6 +24,7 @@ def main() -> None:
     parser.add_argument("--max-duplicates", type=int, default=0)
     parser.add_argument("--max-invalid-age", type=int, default=0)
     parser.add_argument("--max-negative-cost", type=int, default=0)
+    parser.add_argument("--max-null-cells", type=int, default=0)
     args = parser.parse_args()
 
     spark = SparkSession.builder.appName("healthcare-quality").getOrCreate()
@@ -61,6 +62,7 @@ def main() -> None:
         print(json.dumps(result, indent=2, sort_keys=True))
 
         limits = {
+            "null_cells": args.max_null_cells,
             "duplicate_encounters": args.max_duplicates,
             "invalid_age": args.max_invalid_age,
             "negative_cost": args.max_negative_cost,
@@ -70,6 +72,8 @@ def main() -> None:
         }
         if violations:
             raise SystemExit(f"Data-quality checks failed: {violations}")
+        if row_count == 0:
+            raise SystemExit("Data-quality checks failed: empty dataset")
     finally:
         spark.stop()
 

@@ -1,0 +1,12 @@
+{
+  "executor_hosts": [],
+  "executor_count": 0,
+  "multiple_executor_hosts_observed": false,
+  "executor_removals": 0,
+  "non_success_task_ends": 0,
+  "task_attempts_above_zero": 0,
+  "failed_jobs": 0,
+  "application_ended": true,
+  "application_seconds": 16.886,
+  "limits": "Hosts are reported identities, not proof of separate physical machines; higher task attempts may include speculation. An ended app can still fail."
+}

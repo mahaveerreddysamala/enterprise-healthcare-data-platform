@@ -12,6 +12,19 @@ Built with **Python, PySpark, Apache Spark, Amazon S3, Amazon EC2, AWS Systems M
 
 ## 1. Overview
 
+### What I built / What I measured / What I learned
+
+| Built | Measured | Learned |
+|---|---|---|
+| Spark event processing, quality gates, patient Gold features and maturity-aware readmission evaluation | Historical **50M-row single-node EC2/S3** generation/aggregation run: **156.294 seconds, 319,909 rows/sec**; corrected 20K model run excluded **421 training / 562 holdout** immature labels | Partitions do not prove multi-node execution. Chronological splits alone do not prevent unavailable-outcome leakage. |
+
+**Run a complete local demo:** `python scripts/run_readmission_validation.py --rows 5000
+--output-dir artifacts/demo-run-1` (one line, fresh output directory). Inspect quality counts,
+stage timings and lineage in `pipeline-run.json`, then model/cohort reports.
+See the [two-minute demo, DAG graph and operational contract](docs/operational-demo.md) and
+[prepared multi-node experiment](docs/multi-node-experiment.md). No multi-node speedup or
+production SLA is claimed until the corresponding execution evidence exists.
+
 This repository is a reference implementation of a healthcare data platform that converts
 synthetic healthcare events into governed, analytics-ready data products.
 
