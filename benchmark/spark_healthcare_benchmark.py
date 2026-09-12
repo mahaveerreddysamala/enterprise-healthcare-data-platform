@@ -25,6 +25,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--rows", type=int, default=1_000_000)
     parser.add_argument("--output", default="artifacts/healthcare-spark-benchmark/data")
     parser.add_argument("--partitions", type=int, default=16)
+    parser.add_argument("--verify-output", action="store_true")
+    parser.add_argument("--inject-task-failure", action="store_true",
+                        help="Fail partition zero on its first Python task attempt for local testing")
     parser.add_argument(
         "--local-dir",
         default=os.getenv(
@@ -236,6 +239,16 @@ def main() -> None:
         )
     )
 
+    if args.inject_task_failure:
+        def fail_first_attempt(index, records):
+            from pyspark import TaskContext
+            if index == 0 and TaskContext.get().attemptNumber() == 0:
+                raise RuntimeError("controlled-local-task-failure")
+            yield from records
+        patients = spark.createDataFrame(
+            patients.rdd.mapPartitionsWithIndex(fail_first_attempt), patients.schema
+        ).cache()
+
     summary = (
         patients
         .groupBy("region", "diagnosis")
@@ -268,6 +281,18 @@ def main() -> None:
         .parquet(f"{output_path}/summary")
     )
 
+    verification = None
+    if args.verify_output:
+        written = spark.read.parquet(f"{output_path}/patients")
+        actual = written.agg(F.count("*").alias("rows"),
+                             F.sum("patient_id").alias("id_sum")).first()
+        summary_rows = spark.read.parquet(f"{output_path}/summary").agg(
+            F.sum("patient_count").alias("rows")).first()["rows"]
+        verification = {"patient_rows": actual["rows"], "summary_rows": summary_rows,
+                        "patient_id_sum": actual["id_sum"]}
+        if (actual["rows"] != args.rows or summary_rows != args.rows
+                or actual["id_sum"] != args.rows * (args.rows - 1) // 2):
+            raise ValueError(f"Written output failed verification: {verification}")
     elapsed = time.perf_counter() - started
 
     metrics = {
@@ -278,6 +303,8 @@ def main() -> None:
         "rows_per_second": round(args.rows / elapsed, 2),
         "spark_version": spark.version,
         "output": output_path,
+        "verification": verification,
+        "injected_task_failure": args.inject_task_failure,
     }
 
     metrics_output = Path(args.metrics_output)

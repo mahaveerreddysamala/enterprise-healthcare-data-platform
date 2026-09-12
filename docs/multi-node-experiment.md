@@ -1,5 +1,7 @@
 # Multi-node execution protocol — prepared, not yet measured
 
+**Optional paid follow-up.** The [completed local worker experiment](local-worker-experiment.md) runs without AWS. This protocol does not launch infrastructure automatically.
+
 The historical 50M-row EC2/S3 benchmark used one node. Multiple partitions or executors
 on one machine do not establish multi-node scale. No new cloud infrastructure is provisioned
 by this change. Use an approved cluster, unique shared output prefix and spending limit.

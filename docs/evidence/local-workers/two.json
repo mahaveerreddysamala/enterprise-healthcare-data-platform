@@ -1,0 +1,54 @@
+{
+  "single_machine": true,
+  "workers_requested": 2,
+  "rows": 1000000,
+  "injected_failure": false,
+  "status": "passed",
+  "registered_workers": [
+    {
+      "id": "worker-20260911133850-127.0.0.1-36257",
+      "host": "127.0.0.1",
+      "cores": 1,
+      "memory": 1024
+    },
+    {
+      "id": "worker-20260911133850-127.0.0.1-40795",
+      "host": "127.0.0.1",
+      "cores": 1,
+      "memory": 1024
+    }
+  ],
+  "execution": {
+    "executor_hosts": [
+      "127.0.0.1"
+    ],
+    "executor_count": 2,
+    "multiple_executor_hosts_observed": false,
+    "executor_removals": 0,
+    "non_success_task_ends": 0,
+    "task_attempts_above_zero": 0,
+    "failed_jobs": 0,
+    "application_ended": true,
+    "application_seconds": 24.628,
+    "limits": "Hosts are reported identities, not proof of separate physical machines; higher task attempts may include speculation. An ended app can still fail."
+  },
+  "benchmark": {
+    "elapsed_seconds": 21.424,
+    "injected_task_failure": false,
+    "output": "/workspace/scratch/healthcare-local-workers/artifacts/local-workers-two/data",
+    "partitions": 8,
+    "rows": 1000000,
+    "rows_per_second": 46677.14,
+    "spark_version": "3.5.3",
+    "timestamp_utc": "2026-09-11T18:39:21.961292+00:00",
+    "verification": {
+      "patient_id_sum": 499999500000,
+      "patient_rows": 1000000,
+      "summary_rows": 1000000
+    }
+  },
+  "wall_seconds_including_startup_cleanup": 37.479,
+  "recovered_tasks": [],
+  "event_log_sha256": "3d476364fb07dd678a4f31f7713edeaf18b19049f778f427ebb6d15373def675",
+  "evidence_note": "Original execution report augmented by parsing its retained event log for matching failed/successful attempts and SHA-256."
+}

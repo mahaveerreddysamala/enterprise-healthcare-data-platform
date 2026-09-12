@@ -85,3 +85,28 @@ jobs:
         run: python -m pip install --upgrade pip && python -m pip install -r requirements-dashboard.txt
       - name: Run dashboard smoke test
         run: python scripts/smoke_dashboard.py
+
+  local-workers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: python -m pip install pyspark==3.5.3
+      - name: Verify local worker task recovery and output
+        run: python scripts/run_local_workers.py --rows 10000 --workers 2 --inject-failure --output artifacts/ci-workers
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-worker-recovery
+          path: |
+            artifacts/ci-workers/execution.json
+            artifacts/ci-workers/metrics.json
+            artifacts/ci-workers/*.log
+            artifacts/ci-workers/events/
